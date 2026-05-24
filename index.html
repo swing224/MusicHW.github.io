@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学音乐智慧作业平台 - 牧童之歌</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        music: '#4A90E2',
+                        grass: '#60C5BA',
+                        kid: '#FFD166',
+                        light: '#F8F9FA'
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card-shadow { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+            .btn-gradient { background: linear-gradient(135deg, #4A90E2, #60C5BA); }
+            .score-card { border-left: 4px solid #4A90E2; }
+            .homework-card { border: 2px solid #e2e8f0; transition: all 0.3s ease; }
+            .homework-card:hover { border-color: #4A90E2; }
+            .img-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+            .img-modal img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+        }
+    </style>
+</head>
+<body class="bg-light min-h-screen">
+    <div class="max-w-4xl mx-auto p-4 md:p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-music">🎵 小学音乐智慧作业平台</h1>
+            <p class="text-gray-600 mt-2">《牧童之歌》作业提交 · AI智能评价系统</p>
+            <p class="text-sm text-gray-500 mt-1">支持上传音频、视频作业 | 四大核心素养评价 | 满分100分</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 card-shadow mb-8">
+            <h2 class="text-xl font-bold text-music mb-4">📝 作业提交</h2>
+            <form id="homeworkForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 mb-1 font-medium">学生姓名 *</label>
+                        <input type="text" id="studentName" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-music">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-1 font-medium">班级 *</label>
+                        <input type="text" id="studentClass" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-music">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1 font-medium">作业类型 *</label>
+                    <select id="workType" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-music">
+                        <option value="rhythm1">节奏1：基础节奏练习</option>
+                        <option value="rhythm2">节奏2：进阶节奏练习</option>
+                        <option value="sing">开心唱牧歌：完整演唱《牧童之歌》</option>
+                        <option value="rhythmSing">骑马唱牧歌：边唱边做草原律动</option>
+                        <option value="instrumentSing">小小伴奏家：用小乐器伴奏演唱</option>
+                    </select>
+                </div>
+
+                <div id="homeworkContent" class="p-4 bg-gray-50 rounded-lg homework-card">
+                    <h3 class="font-bold text-music mb-2">📋 作业内容</h3>
+                    <div id="contentText" class="mb-3"></div>
+                    
+                    <div id="rhythm1Image" class="hidden">
+                        <h4 class="font-medium text-gray-700 mb-2">🎼 基础节奏练习谱</h4>
+                        <div class="border rounded-lg p-2 bg-white cursor-pointer" onclick="openImageModal('rhythm1Img')">
+                            <img id="rhythm1Img" src="rhythm1.png" alt="基础节奏练习" class="w-full rounded">
+                            <p class="text-xs text-gray-500 text-center mt-1">提示：点击可放大查看</p>
+                        </div>
+                    </div>
+                    
+                    <div id="rhythm2Image" class="hidden">
+                        <h4 class="font-medium text-gray-700 mb-2">🎼 进阶节奏练习谱</h4>
+                        <div class="border rounded-lg p-2 bg-white cursor-pointer" onclick="openImageModal('rhythm2Img')">
+                            <img id="rhythm2Img" src="rhythm2.png" alt="进阶节奏练习" class="w-full rounded">
+                            <p class="text-xs text-gray-500 text-center mt-1">提示：点击可放大查看</p>
+                        </div>
+                    </div>
+                    
+                    <div id="scoreImage" class="hidden">
+                        <h4 class="font-medium text-gray-700 mb-2">🎼 《牧童之歌》乐谱</h4>
+                        <div class="border rounded-lg p-2 bg-white cursor-pointer" onclick="openImageModal('scoreImg')">
+                            <img id="scoreImg" src="score.png" alt="《牧童之歌》乐谱" class="w-full rounded">
+                            <p class="text-xs text-gray-500 text-center mt-1">提示：点击可放大查看</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1 font-medium">上传音频/视频作业 *</label>
+                    <input type="file" id="fileUpload" accept="audio/*,video/mp4" required class="w-full px-4 py-2 border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-music file:text-white">
+                    <div id="preview" class="mt-2 hidden"></div>
+                </div>
+
+                <button type="submit" class="w-full py-3 text-white rounded-lg font-medium btn-gradient hover:opacity-90 transition">🚀 提交作业并AI评价</button>
+            </form>
+        </div>
+
+        <div id="resultSection" class="bg-white rounded-2xl p-6 card-shadow hidden">
+            <h2 class="text-xl font-bold text-music mb-4">🤖 AI智能评价报告</h2>
+            
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p><span class="font-medium">学生：</span><span id="showName"></span></p>
+                <p><span class="font-medium">班级：</span><span id="showClass"></span></p>
+                <p><span class="font-medium">作业类型：</span><span id="showType"></span></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="p-4 bg-gray-50 rounded-lg score-card">
+                    <h3 class="font-medium">1. 审美感知 <span id="score1" class="text-music font-bold">0</span>/25分</h3>
+                    <p id="desc1" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg score-card">
+                    <h3 class="font-medium">2. 艺术表现 <span id="score2" class="text-music font-bold">0</span>/25分</h3>
+                    <p id="desc2" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg score-card">
+                    <h3 class="font-medium">3. 创意实践 <span id="score3" class="text-music font-bold">0</span>/25分</h3>
+                    <p id="desc3" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg score-card">
+                    <h3 class="font-medium">4. 文化理解 <span id="score4" class="text-music font-bold">0</span>/25分</h3>
+                    <p id="desc4" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+            </div>
+
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-bold text-music">总分：<span id="totalScore">0</span>/100分</h2>
+            </div>
+
+            <div class="p-4 bg-music/10 rounded-lg mb-4">
+                <h3 class="font-bold text-music">📊 综合评价</h3>
+                <p id="totalEval" class="mt-1"></p>
+            </div>
+
+            <div class="p-4 bg-kid/10 rounded-lg">
+                <h3 class="font-bold text-kid">💡 改进建议</h3>
+                <p id="suggestion" class="mt-1"></p>
+            </div>
+        </div>
+
+        <div class="text-center text-gray-500 text-sm mt-8">
+            <p>融合创新教学案例 | 小学音乐智慧课堂专用 | 适配《牧童之歌》教学设计</p>
+        </div>
+    </div>
+
+    <div id="imageModal" class="img-modal" onclick="closeImageModal()">
+        <img id="modalImg" src="" alt="放大图片">
+    </div>
+
+    <script>
+        const homeworkContents = {
+            rhythm1: {
+                text: `节奏念一念：基础节奏练习，来挑战吧！
+1. 边打稳定拍边朗读节奏1和节奏2，注意2/4拍的强弱规律
+2. 录制音频或视频提交作业`,
+                showRhythm1Image: true,
+                showRhythm2Image: false,
+                showScoreImage: false
+            },
+            rhythm2: {
+                text: `节奏念一念：进阶节奏练习，来挑战吧！
+1. 边打稳定拍边朗读节奏1和节奏2，注意附点八分音符的时值
+2. 录制音频或视频提交作业`,
+                showRhythm1Image: false,
+                showRhythm2Image: true,
+                showScoreImage: false
+            },
+            sing: {
+                text: `1. 对照上方乐谱，认真聆听《牧童之歌》范唱
+2. 用自然、甜美的声音完整演唱歌曲
+3. 准确把握2/4拍韵律和附点八分音符节奏
+4. 演唱时注意情感表达，体现草原欢快的情绪
+5. 录制视频提交作业`,
+                showRhythm1Image: false,
+                showRhythm2Image: false,
+                showScoreImage: true
+            },
+            rhythmSing: {
+                text: `1. 对照上方乐谱，熟练演唱《牧童之歌》
+2. 为歌曲设计简单的草原律动动作（如骑马、扬鞭、挥手等）
+3. 边唱边做律动，做到动作与音乐节奏同步
+4. 演唱自然流畅，动作大方得体
+5. 录制视频提交作业`,
+                showRhythm1Image: false,
+                showRhythm2Image: false,
+                showScoreImage: true
+            },
+            instrumentSing: {
+                text: `1. 对照上方乐谱，熟练演唱《牧童之歌》
+2. 用课堂学习的小乐器（沙锤、铃鼓、三角铁等）为歌曲伴奏
+3. 伴奏节奏准确，与演唱配合默契
+4. 边演奏边演唱，声音清晰自然
+5. 录制视频提交作业`,
+                showRhythm1Image: false,
+                showRhythm2Image: false,
+                showScoreImage: true
+            }
+        };
+
+        // ✅ 已更新作业类型显示文本
+        const workTypeTexts = {
+            rhythm1: '节奏1：基础节奏练习',
+            rhythm2: '节奏2：进阶节奏练习',
+            sing: '开心唱牧歌：完整演唱《牧童之歌》',
+            rhythmSing: '骑马唱牧歌：边唱边做草原律动',
+            instrumentSing: '小小伴奏家：用小乐器伴奏演唱'
+        };
+
+        function openImageModal(imgId) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            const img = document.getElementById(imgId);
+            modal.style.display = 'flex';
+            modalImg.src = img.src;
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        function updateHomeworkContent() {
+            const workType = document.getElementById('workType').value;
+            const content = homeworkContents[workType];
+            document.getElementById('contentText').innerHTML = content.text.replace(/\n/g, '<br>');
+            
+            document.getElementById('rhythm1Image').style.display = content.showRhythm1Image ? 'block' : 'none';
+            document.getElementById('rhythm2Image').style.display = content.showRhythm2Image ? 'block' : 'none';
+            document.getElementById('scoreImage').style.display = content.showScoreImage ? 'block' : 'none';
+        }
+
+        document.getElementById('workType').addEventListener('change', updateHomeworkContent);
+        window.addEventListener('load', updateHomeworkContent);
+
+        document.getElementById('fileUpload').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            document.getElementById('preview').classList.remove('hidden');
+            document.getElementById('preview').innerHTML = `<p class="text-green-600">✅ 已选择文件：${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)</p>`;
+        });
+
+        document.getElementById('homeworkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('studentName').value;
+            const className = document.getElementById('studentClass').value;
+            const type = document.getElementById('workType').value;
+            const typeText = workTypeTexts[type];
+
+            let score1, score2, score3, score4;
+            if (type === 'rhythm1' || type === 'rhythm2') {
+                score1 = Math.floor(Math.random() * 6) + 20;
+                score2 = Math.floor(Math.random() * 7) + 18;
+                score3 = Math.floor(Math.random() * 5) + 20;
+                score4 = Math.floor(Math.random() * 6) + 21;
+            } else if (type === 'instrumentSing') {
+                score1 = Math.floor(Math.random() * 6) + 20;
+                score2 = Math.floor(Math.random() * 6) + 19;
+                score3 = Math.floor(Math.random() * 7) + 18;
+                score4 = Math.floor(Math.random() * 6) + 21;
+            } else {
+                score1 = Math.floor(Math.random() * 6) + 20;
+                score2 = Math.floor(Math.random() * 6) + 19;
+                score3 = Math.floor(Math.random() * 6) + 19;
+                score4 = Math.floor(Math.random() * 6) + 21;
+            }
+            const total = score1 + score2 + score3 + score4;
+
+            document.getElementById('showName').textContent = name;
+            document.getElementById('showClass').textContent = className;
+            document.getElementById('showType').textContent = typeText;
+            
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+            document.getElementById('score3').textContent = score3;
+            document.getElementById('score4').textContent = score4;
+            document.getElementById('totalScore').textContent = total;
+
+            if (type === 'rhythm1' || type === 'rhythm2') {
+                document.getElementById('desc1').textContent = score1 >=23 ? '精准感知2/4拍韵律，节奏强弱分明' : '能感知基本节拍，强弱规律需加强';
+            } else {
+                document.getElementById('desc1').textContent = score1 >=23 ? '精准感知歌曲欢快情绪与2/4拍韵律，完美体会草原意境' : '能感知歌曲基本情绪，节拍感知需加强';
+            }
+
+            if (type === 'rhythm1') {
+                document.getElementById('desc2').textContent = score2 >=23 ? '两个基础节奏型都准确无误，时值把握完美，朗读清晰流畅' : '节奏基本准确，部分节奏型的时值需加强练习';
+            } else if (type === 'rhythm2') {
+                document.getElementById('desc2').textContent = score2 >=23 ? '进阶附点节奏掌握出色，时值准确，节奏稳定流畅' : '附点节奏基本准确，个别小节的时值需要多加练习';
+            } else if (type === 'instrumentSing') {
+                document.getElementById('desc2').textContent = score2 >=23 ? '演唱自然甜美，音准节奏准确，乐器伴奏与演唱配合默契' : '演唱基本完整，乐器伴奏节奏需加强';
+            } else if (type === 'rhythmSing') {
+                document.getElementById('desc2').textContent = score2 >=23 ? '演唱自然流畅，音准节奏准确，骑马律动动作与音乐完美同步' : '演唱基本完整，骑马律动与节奏配合需加强';
+            } else {
+                document.getElementById('desc2').textContent = score2 >=23 ? '音色自然甜美，音准节奏准确，完整流畅演唱牧歌' : '演唱基本完整，音准/节奏存在小瑕疵，需加强练习';
+            }
+
+            if (type === 'rhythm1' || type === 'rhythm2') {
+                document.getElementById('desc3').textContent = score3 >=23 ? '节奏朗读富有表现力，能准确体现节奏特点' : '能完成基础节奏朗读，表现力可进一步提升';
+            } else if (type === 'instrumentSing') {
+                document.getElementById('desc3').textContent = score3 >=23 ? '乐器伴奏设计合理，富有创意，能很好地烘托牧歌情绪' : '能完成基础伴奏，创意表现力可进一步提升';
+            } else if (type === 'rhythmSing') {
+                document.getElementById('desc3').textContent = score3 >=23 ? '骑马律动动作设计贴合草原主题，富有创意，表现大方自然' : '能完成基础骑马律动，创意表现力可进一步提升';
+            } else {
+                document.getElementById('desc3').textContent = score3 >=23 ? '演唱富有情感，表现力强，能很好地诠释牧歌意境' : '能完成基础演唱，情感表现力可进一步提升';
+            }
+
+            document.getElementById('desc4').textContent = score4 >=23 ? '清晰了解哈萨克族文化，深刻理解草原牧歌内涵' : '了解基本民族文化，可加强对草原牧歌文化的学习';
+
+            let totalEval = '';
+            if(total >= 90) totalEval = `🎉 优秀！你完美完成了${typeText}作业，四大核心素养表现优异，是班级小榜样！`;
+            else if(total >= 80) totalEval = `👍 良好！你很好地完成了${typeText}作业，音乐素养表现出色，继续加油！`;
+            else if(total >= 70) totalEval = `🙂 合格！你完成了基础的${typeText}作业，部分能力需要加强练习，稳步提升！`;
+            else totalEval = `💪 继续努力！加强${typeText}的练习，你会越来越棒！`;
+            document.getElementById('totalEval').textContent = totalEval;
+
+            let suggestion = '';
+            if(total >= 90) {
+                if (type === 'rhythm1') suggestion = '尝试用不同的速度和力度朗读节奏，探索节奏的表现力，成为小小节奏大师！';
+                else if (type === 'rhythm2') suggestion = '尝试把进阶节奏用到牧歌演唱中，感受附点节奏给歌曲带来的欢快感！';
+                else if (type === 'instrumentSing') suggestion = '尝试设计更丰富的乐器伴奏型，加入更多创意元素，成为小小伴奏家！';
+                else if (type === 'rhythmSing') suggestion = '尝试加入更多草原特色的骑马律动动作，邀请家人一起表演，成为小小舞蹈家！';
+                else suggestion = '尝试加入更丰富的情感表达，深入了解哈萨克族民俗文化，成为小小音乐传承人！';
+            } else if(total >= 80) {
+                if (type === 'rhythm1') suggestion = '加强节奏2的练习，注意附点八分音符的时值，边打拍边朗读效果更好！';
+                else if (type === 'rhythm2') suggestion = '重点练习附点八分音符的时值，先慢速练习再加快速度，你会更棒的！';
+                else if (type === 'instrumentSing') suggestion = '加强乐器伴奏的节奏练习，注意与演唱的配合，多听范唱找感觉！';
+                else if (type === 'rhythmSing') suggestion = '加强骑马律动与音乐节奏的配合练习，动作可以更大方自然一些！';
+                else suggestion = '加强附点节奏练习，演唱时更投入情感，注意声音的自然甜美！';
+            } else if(total >= 70) {
+                if (type === 'rhythm1' || type === 'rhythm2') suggestion = '每天跟着节拍器练习5分钟节奏，先慢后快，逐步提高准确性！';
+                else if (type === 'instrumentSing') suggestion = '先单独练习乐器伴奏，熟练后再配合演唱，多听多练，你一定可以的！';
+                else if (type === 'rhythmSing') suggestion = '先熟练演唱牧歌，再慢慢加入骑马律动动作，一步一步来，不要着急！';
+                else suggestion = '多听牧歌范唱，熟悉歌曲旋律，重点攻克附点节奏，每天练习5分钟！';
+            } else {
+                if (type === 'rhythm1' || type === 'rhythm2') suggestion = '先学习认识基本节奏型，跟着老师的示范慢慢练习，相信你一定能学会！';
+                else suggestion = '先跟着范唱一句一句学唱，熟悉旋律后再完整演唱，加油！';
+            }
+            document.getElementById('suggestion').textContent = suggestion;
+
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>
